@@ -1,0 +1,14 @@
+# Build and binary directories
+build/
+bin/
+out/
+.vs/
+
+# Executables
+*.exe
+*.out
+
+# Local SQLite databases
+*.db
+*.sqlite
+*.db-journal
