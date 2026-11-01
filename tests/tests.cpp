@@ -147,6 +147,12 @@ TEST_CASE("CF10 FR08 marking uses the designed MARKED state","[known-defect][sys
     CHECK(f.scalar("SELECT status FROM Submissions WHERE submissionID=1;")=="MARKED");
 }
 #ifdef LMS_CR1
+TEST_CASE("QA01 moderation copies temporary mark strings safely","[quality][integration]") {
+    Fixture f;f.submission();f.sql("UPDATE Submissions SET finalMark=80 WHERE submissionID=1;");
+    f.menu("HOD","2\n1\n75\nreview\n4\n",3);
+    CHECK(f.scalar("SELECT oldValue FROM AuditLog LIMIT 1;")=="80.000000");
+    CHECK(f.scalar("SELECT newValue FROM AuditLog LIMIT 1;")=="75.000000");
+}
 TEST_CASE("MT01 FR12 class extension affects every enrolled student","[maintenance][integration]") {
     Fixture f;DeadlineRepository r(f.db);r.extendClass(2,1,"2026-11-03 12:00:00");
     CHECK(r.effectiveDeadline(1,4)=="2026-11-03 12:00:00");CHECK(r.effectiveDeadline(1,6)=="2026-11-03 12:00:00");
@@ -169,7 +175,7 @@ TEST_CASE("MT04 unauthorised class change rejected without mutation","[maintenan
 }
 TEST_CASE("MT05 equal earlier and invalid dates rejected","[maintenance][unit]") {
     Fixture f;DeadlineRepository r(f.db);
-    for(auto date:{"2026-11-01 12:00:00","2026-10-31 12:00:00","2026-02-30 12:00:00","invalid","2026-13-01 12:00:00","2026-11-03 24:00:00"})
+    for(auto date:{"2026-11-01 12:00:00","2026-10-31 12:00:00","2026-02-30 12:00:00","invalid","2026-13-01 12:00:00","2026-11-03 24:00:00","2026-11-03 12:60:00","2026-11-03 12:00:60","2027-02-29 12:00:00","1969-11-03 12:00:00","2026-00-03 12:00:00","2026-11-00 12:00:00"})
         CHECK_THROWS(r.extendClass(2,1,date));
     CHECK_NOTHROW(r.extendClass(2,1,"2028-02-29 12:00:00"));
 }
