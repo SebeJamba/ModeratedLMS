@@ -1,0 +1,23 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Required submission lifecycle retained from Phase 3
+[*] --> SUBMITTED : on time upload
+[*] --> LATE : late upload
+SUBMITTED --> SUBMITTED : resubmit before effective deadline
+SUBMITTED --> MARKED : lecturer marks and writes feedback
+LATE --> MARKED : lecturer marks with penalty
+MARKED --> MODERATED : HoD approves or adjusts
+MODERATED --> RELEASED : explicit HoD release
+RELEASED --> [*]
+note right of MARKED
+Required design, not a claim of completion.
+Current code uses GRADED and has no
+separate RELEASED operation.
+CR1 must eventually feed deadline guards.
+end note
+
+@enduml

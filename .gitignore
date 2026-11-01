@@ -1,14 +1,11 @@
-# Build and binary directories
-build/
-bin/
-out/
-.vs/
-
-# Executables
-*.exe
-*.out
-
-# Local SQLite databases
+build*/
 *.db
-*.sqlite
 *.db-journal
+*.gcda
+*.gcno
+*.gcov*
+*.pdb
+*.obj
+*.exe
+
+!assessment-evidence/fixes/*.gcov.json.gz

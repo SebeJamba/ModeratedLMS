@@ -1,0 +1,25 @@
+-- Configuring done (0.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/fixed-msvc
+[1/9] Building CXX object CMakeFiles\lms_core.dir\src\Database.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W4'
+[2/9] Building CXX object CMakeFiles\lms_core.dir\src\Security.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W4'
+[3/9] Building CXX object CMakeFiles\lms_core.dir\src\AssessmentService.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W4'
+[4/9] Building CXX object CMakeFiles\lms_core.dir\src\User.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W4'
+[5/9] Building CXX object CMakeFiles\ModeratedLMS.dir\src\main.cpp.obj
+[6/9] Linking CXX static library lms_core.lib
+[7/9] Linking CXX executable ModeratedLMS.exe
+[8/9] Building CXX object CMakeFiles\lms_tests.dir\tests\tests.cpp.obj
+[9/9] Linking CXX executable lms_tests.exe
+Test project C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/fixed-msvc
+    Start 1: implemented_behaviour
+1/2 Test #1: implemented_behaviour ............   Passed    1.62 sec
+    Start 2: requirements_conformance
+2/2 Test #2: requirements_conformance .........   Passed    0.23 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   2.24 sec

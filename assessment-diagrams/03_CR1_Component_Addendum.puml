@@ -1,0 +1,24 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Actual maintenance components and remaining architecture gap
+component "Four role console UI\nUser.cpp and main.cpp" as UI
+component "DeadlineRepository\nextension operations and validation" as repo
+component "Database wrapper\nconnection and schema" as wrapper
+database "SQLite database" as sqlite
+UI --> repo : extension / effective date
+repo --> wrapper : getHandle
+repo --> sqlite : prepared values; transaction
+UI --> wrapper : legacy getHandle
+UI --> sqlite : legacy direct SQL
+note bottom of UI
+Original Phase 3 domain services and
+ISubmissionRepository / penalty Strategy
+are still required. This diagram does not
+claim the full layered design is implemented.
+end note
+
+@enduml

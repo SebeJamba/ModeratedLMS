@@ -1,0 +1,16 @@
+LLVM (http://llvm.org/):
+  LLVM version 14.0.5
+  Optimized build.
+  Default target: x86_64-pc-windows-msvc
+  Host CPU: tigerlake
+Checks: clang-analyzer-*,bugprone-dangling-handle,bugprone-use-after-move; C++17; project include and include/sqlite3
+FILE: Database.cpp
+Exit: 0
+FILE: DeadlineRepository.cpp
+Exit: 0
+FILE: main.cpp
+Exit: 0
+FILE: Security.cpp
+Exit: 0
+FILE: User.cpp
+Exit: 0

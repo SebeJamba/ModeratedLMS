@@ -1,0 +1,325 @@
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+#include "Database.hpp"
+#include "Security.hpp"
+#include "AssessmentService.hpp"
+#include "User.hpp"
+#ifdef LMS_CR1
+#include "DeadlineRepository.hpp"
+#endif
+#include <sstream>
+#include <fstream>
+#include <cstdio>
+#include <chrono>
+#include <limits>
+
+struct Fixture {
+    Database db{":memory:"};
+    Fixture() {
+        db.initializeSchema();
+#ifdef LMS_CR1
+        DeadlineRepository(db).initialize();
+#endif
+        sql("INSERT OR REPLACE INTO Departments VALUES(1,'Computing');");
+        sql("INSERT INTO Users VALUES(1,'admin','test','ADMIN',1),(2,'lecturer','test','LECTURER',1),"
+            "(3,'hod','test','HOD',1),(4,'student','test','STUDENT',1),(5,'other','test','LECTURER',1),"
+            "(6,'student2','test','STUDENT',1);");
+        sql("INSERT INTO Assignments(assignmentID,title,deadline,maxMark) VALUES(1,'Essay','2026-11-01 12:00:00',100);");
+#ifdef LMS_CR1
+        sql("INSERT INTO Courses VALUES('CS4433','Software engineering',1,2);"
+            "INSERT INTO Enrollments VALUES(4,'CS4433'),(6,'CS4433');"
+            "UPDATE Assignments SET courseID='CS4433';");
+#endif
+    }
+    void sql(const std::string& value) {
+        char* error=nullptr;
+        int status=sqlite3_exec(db.getHandle(),value.c_str(),nullptr,nullptr,&error);
+        std::string message=error?error:""; sqlite3_free(error);
+        if(status!=SQLITE_OK) throw std::runtime_error(message);
+    }
+    std::string scalar(const std::string& sql) {
+        sqlite3_stmt* statement=nullptr;
+        if(sqlite3_prepare_v2(db.getHandle(),sql.c_str(),-1,&statement,nullptr)!=SQLITE_OK)
+            throw std::runtime_error(sqlite3_errmsg(db.getHandle()));
+        std::string value;
+        if(sqlite3_step(statement)==SQLITE_ROW && sqlite3_column_type(statement,0)!=SQLITE_NULL)
+            value=reinterpret_cast<const char*>(sqlite3_column_text(statement,0));
+        sqlite3_finalize(statement);return value;
+    }
+    std::string menu(const std::string& role,const std::string& commands,int id) {
+        std::istringstream input(commands);std::ostringstream output;
+        auto oldInput=std::cin.rdbuf(input.rdbuf());auto oldOutput=std::cout.rdbuf(output.rdbuf());
+        try {
+            UserFactory::createUser(id,"test","test",role,1)->displayMenu(db);
+        } catch(...) {
+            std::cin.rdbuf(oldInput);std::cout.rdbuf(oldOutput);std::cin.clear();throw;
+        }
+        std::cin.rdbuf(oldInput);std::cout.rdbuf(oldOutput);std::cin.clear();return output.str();
+    }
+    void submission() {sql("INSERT INTO Submissions(submissionID,assignmentID,studentID,filePath,submissionTime,status) "
+        "VALUES(1,1,4,'essay.txt','2026-11-01 12:00:01','LATE');");}
+};
+TEST_CASE("UT01 factory creates all four polymorphic roles","[unit]") {
+    for(auto role:{"ADMIN","LECTURER","HOD","STUDENT"}) {
+        auto user=UserFactory::createUser(7,"name","hash",role,1);
+        CHECK(user->getRoleName()==role);CHECK(user->getUserID()==7);CHECK(user->getUsername()=="name");
+    }
+}
+TEST_CASE("UT02 unknown role is rejected","[unit]") {
+    CHECK_THROWS_AS(UserFactory::createUser(1,"x","y","SUPERUSER",1),std::invalid_argument);
+}
+TEST_CASE("UT03 password round trip and rejection","[unit]") {
+    auto stored=hashPassword("Secret123!",generateSalt());
+    CHECK(verifyPassword("Secret123!",stored));CHECK_FALSE(verifyPassword("wrong",stored));
+    CHECK_FALSE(verifyPassword("Secret123!","malformed"));
+}
+TEST_CASE("IT01 schema creation is repeatable and foreign keys are enabled","[integration]") {
+    Fixture f;CHECK_NOTHROW(f.db.initializeSchema());CHECK(f.scalar("PRAGMA foreign_keys;")=="1");
+}
+TEST_CASE("IT02 username and role constraints reject invalid records","[integration]") {
+    Fixture f;CHECK_THROWS(f.sql("INSERT INTO Users VALUES(9,'student','x','STUDENT',1);"));
+    CHECK_THROWS(f.sql("INSERT INTO Users VALUES(9,'unique','x','ROOT',1);"));
+}
+TEST_CASE("IT03 invalid foreign key rejected","[integration]") {
+    Fixture f;CHECK_THROWS(f.sql("INSERT INTO Submissions(assignmentID,studentID) VALUES(999,4);"));
+}
+TEST_CASE("IT04 data survives database reopening","[integration]") {
+    const char* name="persistence-test.db";std::remove(name);
+    {Database db(name);db.initializeSchema();REQUIRE(sqlite3_exec(db.getHandle(),"UPDATE Departments SET departmentName='Science' WHERE departmentID=1;",nullptr,nullptr,nullptr)==SQLITE_OK);}
+    {Database db(name);sqlite3_stmt* p=nullptr;REQUIRE(sqlite3_prepare_v2(db.getHandle(),"SELECT departmentName FROM Departments WHERE departmentID=1;",-1,&p,nullptr)==SQLITE_OK);
+    REQUIRE(sqlite3_step(p)==SQLITE_ROW);CHECK(std::string(reinterpret_cast<const char*>(sqlite3_column_text(p,0)))=="Science");sqlite3_finalize(p);}
+    std::remove(name);
+}
+TEST_CASE("ST01 student submits existing assignment","[system]") {
+    Fixture f;auto output=f.menu("STUDENT","2\n1\nessay.txt\n4\n",4);
+    CHECK(output.find("submitted successfully")!=std::string::npos);
+    CHECK(f.scalar("SELECT COUNT(*) FROM Submissions WHERE studentID=4;")=="1");
+}
+TEST_CASE("ST02 lecturer records mark","[system]") {
+    Fixture f;f.submission();f.menu("LECTURER","2\n1\n80\nUseful written feedback\nInitial marking\n3\n",2);
+    CHECK(f.scalar("SELECT rawMark FROM Submissions WHERE submissionID=1;")=="80.0");
+}
+TEST_CASE("ST03 administrator creates a valid user","[system]") {
+    Fixture f;f.menu("ADMIN","1\nnewstudent\nSecret123!\nSTUDENT\n1\n3\n",1);
+    CHECK(f.scalar("SELECT role FROM Users WHERE username='newstudent';")=="STUDENT");
+    CHECK(f.scalar("SELECT passwordHash FROM Users WHERE username='newstudent';")!="Secret123!");
+}
+TEST_CASE("ST04 all role menus can log out","[system]") {
+    Fixture f;CHECK_FALSE(f.menu("ADMIN","2\n3\n",1).empty());
+    CHECK_FALSE(f.menu("LECTURER","3\n",2).empty());
+    CHECK_FALSE(f.menu("HOD","1\n3\n4\n",3).empty());
+    CHECK_FALSE(f.menu("STUDENT","1\n3\n4\n",4).empty());
+}
+TEST_CASE("CF01 FR10 marks stay hidden before release","[known-defect][system]") {
+    Fixture f;f.submission();f.menu("LECTURER","2\n1\n80\nUseful written feedback\nInitial marking\n3\n",2);
+    auto output=f.menu("STUDENT","3\n4\n",4);CHECK(output.find("80.000000")==std::string::npos);
+}
+TEST_CASE("CF02 FR11 lecturer mark change creates audit record","[known-defect][system]") {
+    Fixture f;f.submission();f.menu("LECTURER","2\n1\n80\nUseful written feedback\nInitial marking\n3\n",2);
+    CHECK(f.scalar("SELECT COUNT(*) FROM AuditLog;")=="1");
+}
+TEST_CASE("CF03 FR08 marks above maximum are rejected","[known-defect][system]") {
+    Fixture f;f.submission();f.menu("LECTURER","2\n1\n101\nUseful feedback\nInitial marking\n3\n",2);
+    CHECK(f.scalar("SELECT rawMark IS NULL FROM Submissions WHERE submissionID=1;")=="1");
+}
+TEST_CASE("CF04 FR07 one partial late day deducts ten available marks","[known-defect][system]") {
+    Fixture f;f.submission();f.menu("LECTURER","2\n1\n80\nUseful written feedback\nInitial marking\n3\n",2);
+    CHECK(f.scalar("SELECT finalMark FROM Submissions WHERE submissionID=1;")=="70.0");
+}
+TEST_CASE("CF05 FR05 submission records current date","[known-defect][system]") {
+    Fixture f;f.menu("STUDENT","2\n1\nessay.txt\n4\n",4);
+    CHECK(f.scalar("SELECT date(submissionTime)=date('now','localtime') FROM Submissions;")=="1");
+}
+TEST_CASE("CF06 FR06 resubmission updates active attempt","[known-defect][system]") {
+    Fixture f;f.sql("UPDATE Assignments SET deadline='2099-11-01 12:00:00';");f.menu("STUDENT","2\n1\nfirst.txt\n2\n1\nsecond.txt\n4\n",4);
+    CHECK(f.scalar("SELECT COUNT(*) FROM Submissions WHERE assignmentID=1 AND studentID=4;")=="1");
+}
+TEST_CASE("CF07 FR08 written feedback column exists","[known-defect][integration]") {
+    Fixture f;CHECK(f.scalar("SELECT COUNT(*) FROM pragma_table_info('Submissions') WHERE name='feedback';")=="1");
+}
+TEST_CASE("CF08 FR11 audit records identify the changed submission","[known-defect][integration]") {
+    Fixture f;CHECK(f.scalar("SELECT COUNT(*) FROM pragma_table_info('AuditLog') WHERE name='submissionID';")=="1");
+}
+TEST_CASE("CF09 NFR02 stored hash identifies a recognised password KDF","[known-defect][unit]") {
+    auto hash=hashPassword("Secret123!",generateSalt());
+    CHECK((hash.find("$argon2")==0 || hash.find("pbkdf2$")==0 || hash.find("$2b$")==0));
+}
+TEST_CASE("CF10 FR08 marking uses the designed MARKED state","[known-defect][system]") {
+    Fixture f;f.submission();f.menu("LECTURER","2\n1\n80\nUseful written feedback\nInitial marking\n3\n",2);
+    CHECK(f.scalar("SELECT status FROM Submissions WHERE submissionID=1;")=="MARKED");
+}
+#ifdef LMS_CR1
+TEST_CASE("QA01 moderation copies temporary mark strings safely","[quality][integration]") {
+    Fixture f;f.submission();f.sql("UPDATE Submissions SET finalMark=80,status='MARKED' WHERE submissionID=1;");
+    f.menu("HOD","2\n1\n75\nreview\n4\n",3);
+    CHECK(f.scalar("SELECT oldValue FROM AuditLog LIMIT 1;")=="80.000000");
+    CHECK(f.scalar("SELECT newValue FROM AuditLog LIMIT 1;")=="75.000000");
+}
+TEST_CASE("MT01 FR12 class extension affects every enrolled student","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);r.extendClass(2,1,"2026-11-03 12:00:00");
+    CHECK(r.effectiveDeadline(1,4)=="2026-11-03 12:00:00");CHECK(r.effectiveDeadline(1,6)=="2026-11-03 12:00:00");
+    CHECK(f.scalar("SELECT COUNT(*) FROM Extensions;")=="2");
+}
+TEST_CASE("MT02 longer individual extension is preserved","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);r.extendIndividual(2,1,4,"2026-11-05 12:00:00");
+    r.extendClass(2,1,"2026-11-03 12:00:00");CHECK(r.effectiveDeadline(1,4)=="2026-11-05 12:00:00");
+    CHECK(r.effectiveDeadline(1,6)=="2026-11-03 12:00:00");
+}
+TEST_CASE("MT03 new enrolment inherits durable class deadline","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);r.extendClass(2,1,"2026-11-03 12:00:00");
+    f.sql("INSERT INTO Users VALUES(7,'later','x','STUDENT',1);INSERT INTO Enrollments VALUES(7,'CS4433');");
+    CHECK(r.effectiveDeadline(1,7)=="2026-11-03 12:00:00");
+}
+TEST_CASE("MT04 unauthorised class change rejected without mutation","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);
+    for(int actor:{1,3,4,5}) CHECK_THROWS(r.extendClass(actor,1,"2026-11-03 12:00:00"));
+    CHECK(f.scalar("SELECT COUNT(*) FROM Extensions;")=="0");CHECK(f.scalar("SELECT COUNT(*) FROM ClassExtensions;")=="0");
+}
+TEST_CASE("MT05 equal earlier and invalid dates rejected","[maintenance][unit]") {
+    Fixture f;DeadlineRepository r(f.db);
+    for(auto date:{"2026-11-01 12:00:00","2026-10-31 12:00:00","2026-02-30 12:00:00","invalid","2026-13-01 12:00:00","2026-11-03 24:00:00","2026-11-03 12:60:00","2026-11-03 12:00:60","2027-02-29 12:00:00","1969-11-03 12:00:00","2026-00-03 12:00:00","2026-11-00 12:00:00"})
+        CHECK_THROWS(r.extendClass(2,1,date));
+    CHECK_NOTHROW(r.extendClass(2,1,"2028-02-29 12:00:00"));
+}
+TEST_CASE("MT06 class update rolls back on a database error","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);
+    f.sql("CREATE TRIGGER reject_extension BEFORE INSERT ON Extensions WHEN NEW.studentID=6 BEGIN SELECT RAISE(ABORT,'test failure'); END;");
+    CHECK_THROWS(r.extendClass(2,1,"2026-11-03 12:00:00"));
+    CHECK(f.scalar("SELECT COUNT(*) FROM ClassExtensions;")=="0");CHECK(f.scalar("SELECT COUNT(*) FROM Extensions;")=="0");
+}
+TEST_CASE("MT07 student list shows effective deadline","[maintenance][system]") {
+    Fixture f;DeadlineRepository(f.db).extendClass(2,1,"2026-11-03 12:00:00");
+    CHECK(f.menu("STUDENT","1\n4\n",4).find("Effective deadline: 2026-11-03 12:00:00")!=std::string::npos);
+}
+TEST_CASE("MT08 lecturer menu performs class extension","[maintenance][system]") {
+    Fixture f;f.menu("LECTURER","4\n1\n2026-11-03 12:00:00\n3\n",2);
+    CHECK(DeadlineRepository(f.db).effectiveDeadline(1,4)=="2026-11-03 12:00:00");
+}
+TEST_CASE("MT09 migration is repeatable and leaves submission data intact","[maintenance][integration]") {
+    Fixture f;f.submission();CHECK_NOTHROW(DeadlineRepository(f.db).initialize());
+    CHECK(f.scalar("SELECT COUNT(*) FROM Submissions;")=="1");
+    CHECK(f.scalar("SELECT COUNT(*) FROM SchemaMigrations;")=="1");
+}
+TEST_CASE("MT10 unknown assignment and unenrolled individual rejected","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);CHECK_THROWS(r.extendClass(2,999,"2026-11-03 12:00:00"));
+    CHECK_THROWS(r.effectiveDeadline(999,4));CHECK_THROWS(r.extendIndividual(2,1,5,"2026-11-03 12:00:00"));
+}
+TEST_CASE("MT11 base and individual deadline boundaries","[maintenance][integration]") {
+    Fixture f;DeadlineRepository r(f.db);CHECK(r.effectiveDeadline(1,4)=="2026-11-01 12:00:00");
+    CHECK_THROWS(r.extendIndividual(2,1,4,"2026-11-01 12:00:00"));
+    CHECK_NOTHROW(r.extendIndividual(2,1,4,"2026-11-01 12:00:01"));
+    CHECK(r.effectiveDeadline(1,4)=="2026-11-01 12:00:01");
+}
+#endif
+
+TEST_CASE("RG01 complete workflow hides mark and feedback until separate release","[regression][system]") {
+    Fixture f;f.submission();AssessmentService a(f.db);
+    a.mark(2,1,80,"Detailed written feedback","Initial marking");
+    auto pending=a.studentSubmissions(4);REQUIRE(pending.size()==1);
+    CHECK(pending[0].mark=="Pending");CHECK(pending[0].feedback.empty());
+    CHECK_THROWS(a.release(3,1));
+    a.moderate(3,1,75,"Reviewed the rubric");
+    CHECK(a.studentSubmissions(4)[0].mark=="Pending");
+    a.release(3,1);auto released=a.studentSubmissions(4)[0];
+    CHECK(released.status=="RELEASED");CHECK(released.mark=="75.000000");CHECK(released.feedback=="Detailed written feedback");
+    CHECK(f.scalar("SELECT COUNT(*) FROM AuditLog WHERE submissionID=1;")=="3");
+    a.mark(2,1,85,"Corrected feedback","Corrected calculation");
+    CHECK(a.studentSubmissions(4)[0].mark=="Pending");CHECK(a.studentSubmissions(4)[0].feedback.empty());
+}
+TEST_CASE("RG02 penalty boundaries use available maximum and partial days","[regression][unit]") {
+    StandardLatePenalty rule;
+    for(long long t:{-1LL,0LL})CHECK(rule.finalMark(80,100,t)==80);
+    for(long long t:{1LL,86400LL})CHECK(rule.finalMark(80,100,t)==70);
+    for(long long t:{86401LL,172800LL})CHECK(rule.finalMark(80,100,t)==60);
+    for(long long t:{172801LL,259200LL})CHECK(rule.finalMark(80,100,t)==50);
+    CHECK(rule.finalMark(80,100,259201)==0);CHECK(rule.finalMark(5,100,86400)==0);
+    CHECK(rule.finalMark(0,100,0)==0);CHECK(rule.finalMark(100,100,0)==100);
+    CHECK_THROWS(rule.finalMark(-0.01,100,0));CHECK_THROWS(rule.finalMark(100.01,100,0));
+    CHECK_THROWS(rule.finalMark(1,0,0));CHECK_THROWS(rule.finalMark(std::numeric_limits<double>::quiet_NaN(),100,0));
+}
+TEST_CASE("RG03 clock controlled submission and replacement boundaries","[regression][integration]") {
+    Fixture f;std::string now="2026-11-01 11:59:59";AssessmentService a(f.db,[&]{return now;});
+    int id=a.submit(4,1,"first.txt");CHECK(a.submit(4,1,"corrected.txt")==id);
+    CHECK(f.scalar("SELECT filePath FROM Submissions;")=="corrected.txt");
+    now="2026-11-01 12:00:00";CHECK_THROWS(a.submit(4,1,"at-cutoff.txt"));
+    CHECK(a.submit(6,1,"on-time.txt")>0);
+    CHECK(f.scalar("SELECT status FROM Submissions WHERE studentID=6;")=="SUBMITTED");
+    now="2026-11-01 12:00:01";CHECK_THROWS(a.submit(4,1,"too-late.txt"));
+    CHECK(f.scalar("SELECT COUNT(*) FROM Submissions WHERE studentID=4;")=="1");
+}
+TEST_CASE("RG04 class and individual extensions drive submission and penalty rules","[regression][integration]") {
+    Fixture f;DeadlineRepository deadline(f.db);deadline.extendClass(2,1,"2026-11-03 12:00:00");
+    AssessmentService a(f.db,[]{return "2026-11-03 11:59:59";});
+    int id=a.submit(4,1,"extended.txt");a.mark(2,id,80,"Good work","Initial marking");
+    CHECK(f.scalar("SELECT finalMark FROM Submissions WHERE studentID=4;")=="80.0");
+    deadline.extendIndividual(2,1,6,"2026-11-05 12:00:00");
+    AssessmentService later(f.db,[]{return "2026-11-04 12:00:00";});
+    int second=later.submit(6,1,"individual.txt");later.mark(2,second,80,"Good work","Initial marking");
+    CHECK(f.scalar("SELECT finalMark FROM Submissions WHERE studentID=6;")=="80.0");
+}
+TEST_CASE("RG05 role and department restrictions enforced in assessment operations","[regression][integration]") {
+    Fixture f;f.submission();f.sql("INSERT INTO Users VALUES(7,'otherhod','x','HOD',2);");AssessmentService a(f.db);
+    CHECK_THROWS(a.mark(5,1,80,"feedback","reason"));CHECK_THROWS(a.mark(4,1,80,"feedback","reason"));
+    CHECK_THROWS(a.submit(2,1,"work.txt"));CHECK_THROWS(a.studentSubmissions(2));
+    a.mark(2,1,80,"feedback","reason");
+    CHECK(a.departmentSubmissions(7).empty());CHECK(a.departmentAudit(7).empty());
+    CHECK_THROWS(a.moderate(7,1,75,"review"));CHECK_THROWS(a.release(7,1));
+    CHECK_THROWS(a.moderate(4,1,75,"review"));CHECK_THROWS(a.departmentSubmissions(4));
+    CHECK(f.scalar("SELECT status FROM Submissions;")=="MARKED");
+}
+TEST_CASE("RG06 grade and audit roll back together on storage failure","[regression][integration]") {
+    Fixture f;f.submission();
+    f.sql("CREATE TRIGGER reject_audit BEFORE INSERT ON AuditLog BEGIN SELECT RAISE(ABORT,'injected fault'); END;");
+    AssessmentService a(f.db);CHECK_THROWS(a.mark(2,1,80,"feedback","reason"));
+    CHECK(f.scalar("SELECT rawMark IS NULL FROM Submissions;")=="1");CHECK(f.scalar("SELECT status FROM Submissions;")=="LATE");
+    CHECK(f.scalar("SELECT COUNT(*) FROM AuditLog;")=="0");
+}
+TEST_CASE("RG07 audit rows are immutable and identify every modification","[regression][integration]") {
+    Fixture f;f.submission();AssessmentService a(f.db);a.mark(2,1,80,"feedback","Initial mark");
+    CHECK(f.scalar("SELECT actorID FROM AuditLog;")=="2");CHECK(f.scalar("SELECT submissionID FROM AuditLog;")=="1");
+    CHECK(f.scalar("SELECT reason FROM AuditLog;")=="Initial mark");CHECK_FALSE(f.scalar("SELECT timestamp FROM AuditLog;").empty());
+    CHECK_THROWS(f.sql("UPDATE AuditLog SET reason='changed';"));CHECK_THROWS(f.sql("DELETE FROM AuditLog;"));
+}
+TEST_CASE("RG08 invalid input unknown targets and closed streams do not crash or loop","[regression][system]") {
+    Fixture f;CHECK_FALSE(f.menu("STUDENT","nonsense\n4\n",4).empty());
+    CHECK_NOTHROW(f.menu("LECTURER","",2));CHECK_NOTHROW(f.menu("HOD","",3));CHECK_NOTHROW(f.menu("ADMIN","",1));
+    AssessmentService a(f.db);CHECK_THROWS(a.submit(4,999,"work.txt"));CHECK_THROWS(a.submit(4,1,"   "));
+    CHECK_THROWS(a.mark(2,999,80,"feedback","reason"));CHECK_THROWS(a.mark(2,999,80,"","reason"));
+    CHECK_THROWS(timestampSeconds("2026-02-30 12:00:00"));CHECK_THROWS(timestampSeconds("invalid"));
+}
+TEST_CASE("RG09 PBKDF2 matches independently computed SHA256 reference","[regression][unit]") {
+    const std::string expected="pbkdf2$600000$000102030405060708090a0b0c0d0e0f$3bc37118e625093e9b79ed08930ea7af7389591233fdd92dddf369371e60dbc0";
+    CHECK(hashPassword("password","000102030405060708090a0b0c0d0e0f")==expected);
+    CHECK_FALSE(verifyPassword("password","pbkdf2$600000$malformed"));
+    CHECK_THROWS(hashPassword("password","default_salt_123"));
+    CHECK(generateSalt()!=generateSalt());
+}
+TEST_CASE("RG10 late initial work is accepted with real late status","[regression][integration]") {
+    Fixture f;AssessmentService a(f.db,[]{return "2026-11-05 12:00:00";});
+    int id=a.submit(4,1,"late.txt");CHECK(f.scalar("SELECT status FROM Submissions;")=="LATE");
+    a.mark(2,id,80,"feedback","Initial marking");CHECK(f.scalar("SELECT finalMark FROM Submissions;")=="0.0");
+    CHECK_THROWS(a.submit(4,1,"replace-marked.txt"));
+}
+
+TEST_CASE("RG11 additive migration preserves duplicates as inactive historical attempts","[regression][integration]") {
+    Database db(":memory:");
+    const char* legacy="CREATE TABLE Submissions(submissionID INTEGER PRIMARY KEY,assignmentID INTEGER,studentID INTEGER,filePath TEXT,submissionTime TEXT,status TEXT,rawMark REAL,finalMark REAL);"
+        "CREATE TABLE AuditLog(logID INTEGER PRIMARY KEY,actorID INTEGER,timestamp TEXT,oldValue TEXT,newValue TEXT,reason TEXT);"
+        "INSERT INTO Submissions VALUES(1,1,4,'old','2026-11-01 11:00:00','GRADED',80,80),(2,1,4,'new','2026-11-01 11:30:00','SUBMITTED',NULL,NULL);"
+        "INSERT INTO AuditLog VALUES(1,NULL,'2026-11-01 12:00:00','70','80','Legacy audit');";
+    REQUIRE(sqlite3_exec(db.getHandle(),legacy,nullptr,nullptr,nullptr)==SQLITE_OK);
+    REQUIRE_NOTHROW(db.initializeSchema());REQUIRE_NOTHROW(db.initializeSchema());
+    sqlite3_stmt* q=nullptr;
+    REQUIRE(sqlite3_prepare_v2(db.getHandle(),"SELECT COUNT(*),SUM(isActive),MIN(CASE WHEN isActive=1 THEN submissionID END) FROM Submissions;",-1,&q,nullptr)==SQLITE_OK);
+    REQUIRE(sqlite3_step(q)==SQLITE_ROW);CHECK(sqlite3_column_int(q,0)==2);CHECK(sqlite3_column_int(q,1)==1);CHECK(sqlite3_column_int(q,2)==2);sqlite3_finalize(q);
+    REQUIRE(sqlite3_prepare_v2(db.getHandle(),"SELECT reason FROM AuditLog WHERE logID=1;",-1,&q,nullptr)==SQLITE_OK);
+    REQUIRE(sqlite3_step(q)==SQLITE_ROW);CHECK(std::string(reinterpret_cast<const char*>(sqlite3_column_text(q,0)))=="Legacy audit");sqlite3_finalize(q);
+}
+TEST_CASE("RG12 moderation and release roll back on audit failure","[regression][integration]") {
+    Fixture f;f.submission();AssessmentService a(f.db);a.mark(2,1,80,"feedback","initial");
+    f.sql("CREATE TRIGGER reject_next_audit BEFORE INSERT ON AuditLog BEGIN SELECT RAISE(ABORT,'injected fault'); END;");
+    CHECK_THROWS(a.moderate(3,1,75,"review"));CHECK(f.scalar("SELECT status FROM Submissions;")=="MARKED");
+    f.sql("DROP TRIGGER reject_next_audit;");a.moderate(3,1,75,"review");
+    f.sql("CREATE TRIGGER reject_release_audit BEFORE INSERT ON AuditLog BEGIN SELECT RAISE(ABORT,'injected fault'); END;");
+    CHECK_THROWS(a.release(3,1));CHECK(f.scalar("SELECT status FROM Submissions;")=="MODERATED");CHECK(a.studentSubmissions(4)[0].mark=="Pending");
+}

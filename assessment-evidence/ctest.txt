@@ -1,0 +1,14 @@
+Test project C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/ninja-v1.1
+    Start 1: implemented_behaviour
+1/2 Test #1: implemented_behaviour ............   Passed    0.27 sec
+    Start 2: requirements_conformance
+2/2 Test #2: requirements_conformance .........***Failed    0.09 sec
+
+
+50% tests passed, 1 tests failed out of 2
+
+Total Test time (real) =   0.39 sec
+
+The following tests FAILED:
+	  2 - requirements_conformance (Failed)
+Errors while running CTest

@@ -1,0 +1,39 @@
+{
+  "tool": "GCC gcov JSON",
+  "scope": "Application C++ sources linked into lms_core; excludes main, SQLite, Catch2 and standard library. Mixed-layer code is not an isolated business-logic layer.",
+  "files": [
+    {
+      "file": "AssessmentService.cpp",
+      "covered_lines": 232,
+      "executable_lines": 245,
+      "percent": 94.69
+    },
+    {
+      "file": "Database.cpp",
+      "covered_lines": 42,
+      "executable_lines": 60,
+      "percent": 70.0
+    },
+    {
+      "file": "DeadlineRepository.cpp",
+      "covered_lines": 86,
+      "executable_lines": 92,
+      "percent": 93.48
+    },
+    {
+      "file": "Security.cpp",
+      "covered_lines": 49,
+      "executable_lines": 66,
+      "percent": 74.24
+    },
+    {
+      "file": "User.cpp",
+      "covered_lines": 193,
+      "executable_lines": 294,
+      "percent": 65.65
+    }
+  ],
+  "covered_lines": 602,
+  "executable_lines": 757,
+  "percent": 79.52
+}

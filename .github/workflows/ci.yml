@@ -1,0 +1,70 @@
+name: Build and test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -A x64
+      - name: Build
+        run: cmake --build build --config Debug
+      - name: Run all requirement and regression tests
+        run: ctest --test-dir build -C Debug --output-on-failure
+      - name: Exercise full console workflow
+        run: python tools/console_smoke.py build/Debug/ModeratedLMS.exe build/console-workflow.txt
+      - name: Show failing assertions
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem build -Filter '*results.xml' | ForEach-Object {
+            [xml]$report = Get-Content $_.FullName
+            $report.SelectNodes('//testcase[failure or error]') | ForEach-Object {
+              Write-Output $_.name
+              Write-Output $_.InnerText
+            }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            build/console-workflow.txt
+            build/*results.xml
+            build/Testing/Temporary/LastTest.log
+  windows-gcc-coverage:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned portable compiler
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://github.com/skeeto/w64devkit/releases/download/v2.11.0/w64devkit-x64-2.11.0.7z.exe -OutFile compiler.7z.exe
+          if ((Get-FileHash compiler.7z.exe -Algorithm SHA256).Hash.ToLower() -ne '54c2bb9962e8a30c8270e34c5efc3d5fee579f53087fa7d435b95fbba2af7b2b') { throw 'Compiler checksum mismatch' }
+          7z x compiler.7z.exe -ocompiler -y
+          "$pwd/compiler/w64devkit/bin" | Out-File $env:GITHUB_PATH -Append
+      - name: Build with line instrumentation
+        run: |
+          cmake -S . -B build-gcc -G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build-gcc --parallel 2
+      - name: Run full suite
+        run: ./build-gcc/lms_tests.exe --reporter junit --out build-gcc/all-results.xml
+      - name: Export coverage
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force coverage | Out-Null
+          $files=Get-ChildItem build-gcc/CMakeFiles/lms_core.dir/src -Filter '*.gcno'
+          Push-Location coverage
+          foreach($file in $files) { gcov -j $file.FullName }
+          Pop-Location
+          python tools/coverage_summary.py coverage coverage/summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gcc-coverage
+          path: |
+            coverage/
+            build-gcc/all-results.xml

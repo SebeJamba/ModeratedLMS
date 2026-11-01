@@ -1,0 +1,23 @@
+[
+  {
+    "file": "v1.0-all-tests.xml",
+    "test_cases": 21,
+    "passed": 11,
+    "failed": 10,
+    "assertions": 44
+  },
+  {
+    "file": "v1.1-all-tests.xml",
+    "test_cases": 33,
+    "passed": 23,
+    "failed": 10,
+    "assertions": 86
+  },
+  {
+    "file": "v1.1-gcc-all-tests.xml",
+    "test_cases": 33,
+    "passed": 23,
+    "failed": 10,
+    "assertions": 86
+  }
+]

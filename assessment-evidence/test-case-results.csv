@@ -1,0 +1,34 @@
+test_id,test_case,actual_result,reproduction
+UT01,UT01 factory creates all four polymorphic roles,PASS,tests/tests.cpp; exact inputs and assertions are executable
+UT02,UT02 unknown role is rejected,PASS,tests/tests.cpp; exact inputs and assertions are executable
+UT03,UT03 password round trip and rejection,PASS,tests/tests.cpp; exact inputs and assertions are executable
+IT01,IT01 schema creation is repeatable and foreign keys are enabled,PASS,tests/tests.cpp; exact inputs and assertions are executable
+IT02,IT02 username and role constraints reject invalid records,PASS,tests/tests.cpp; exact inputs and assertions are executable
+IT03,IT03 invalid foreign key rejected,PASS,tests/tests.cpp; exact inputs and assertions are executable
+IT04,IT04 data survives database reopening,PASS,tests/tests.cpp; exact inputs and assertions are executable
+ST01,ST01 student submits existing assignment,PASS,tests/tests.cpp; exact inputs and assertions are executable
+ST02,ST02 lecturer records mark,PASS,tests/tests.cpp; exact inputs and assertions are executable
+ST03,ST03 administrator creates a valid user,PASS,tests/tests.cpp; exact inputs and assertions are executable
+ST04,ST04 all role menus can log out,PASS,tests/tests.cpp; exact inputs and assertions are executable
+CF01,CF01 FR10 marks stay hidden before release,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF02,CF02 FR11 lecturer mark change creates audit record,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF03,CF03 FR08 marks above maximum are rejected,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF04,CF04 FR07 one partial late day deducts ten available marks,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF05,CF05 FR05 submission records current date,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF06,CF06 FR06 resubmission updates active attempt,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF07,CF07 FR08 written feedback column exists,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF08,CF08 FR11 audit records identify the changed submission,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF09,CF09 NFR02 stored hash identifies a recognised password KDF,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+CF10,CF10 FR08 marking uses the designed MARKED state,FAIL,tests/tests.cpp; exact inputs and assertions are executable
+QA01,QA01 moderation copies temporary mark strings safely,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT01,MT01 FR12 class extension affects every enrolled student,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT02,MT02 longer individual extension is preserved,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT03,MT03 new enrolment inherits durable class deadline,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT04,MT04 unauthorised class change rejected without mutation,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT05,MT05 equal earlier and invalid dates rejected,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT06,MT06 class update rolls back on a database error,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT07,MT07 student list shows effective deadline,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT08,MT08 lecturer menu performs class extension,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT09,MT09 migration is repeatable and leaves submission data intact,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT10,MT10 unknown assignment and unenrolled individual rejected,PASS,tests/tests.cpp; exact inputs and assertions are executable
+MT11,MT11 base and individual deadline boundaries,PASS,tests/tests.cpp; exact inputs and assertions are executable

@@ -1,0 +1,8 @@
+risk_id,likelihood,impact,exposure,current_status
+R01,3,4,12,Open: legacy SQLite checks incomplete
+R02,4,4,16,Materialised: design/implementation mismatch
+R03,3,4,12,Open: individual workload
+R04,3,5,15,Open: artefact reconciliation and real gate review
+R05,2,4,8,Materialised: no recognised password KDF
+R06,2,5,10,Open: target-machine demonstration pending
+R07,3,3,9,Open: isolated business layer absent despite measured application coverage
