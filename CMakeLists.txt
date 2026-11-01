@@ -1,19 +1,28 @@
-cmake_minimum_required(VERSION 3.15)
-project(ModeratedLMS)
-
+cmake_minimum_required(VERSION 3.14)
+project(ModeratedLMS VERSION 1.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
-
-# Add your project source files along with sqlite3.c
-add_executable(ModeratedLMS
-    src/main.cpp
-    src/Database.cpp
-    src/Security.cpp
-    src/User.cpp
-    include/sqlite3/sqlite3.c   # <-- Include the SQLite amalgamation source here
-)
-
-# Tell the compiler where to find sqlite3.h
-target_include_directories(ModeratedLMS PRIVATE
-    include
-    include/sqlite3             # <-- So Database.hpp can find #include "sqlite3.h" or <sqlite3.h>
-)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_library(lms_core src/Database.cpp src/Security.cpp src/User.cpp include/sqlite3/sqlite3.c)
+target_include_directories(lms_core PUBLIC include include/sqlite3)
+if(WIN32)
+ target_link_libraries(lms_core PUBLIC bcrypt)
+endif()
+option(ENABLE_COVERAGE "Measure application line coverage with GNU tools" OFF)
+if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+ target_compile_options(lms_core PRIVATE -O0 -g --coverage)
+ target_link_options(lms_core PUBLIC --coverage)
+endif()
+if(MSVC)
+ target_compile_options(lms_core PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
+endif()
+add_executable(ModeratedLMS src/main.cpp)
+target_link_libraries(ModeratedLMS PRIVATE lms_core)
+include(CTest)
+if(BUILD_TESTING)
+ add_executable(lms_tests tests/tests.cpp)
+ target_include_directories(lms_tests PRIVATE tests/vendor)
+ target_link_libraries(lms_tests PRIVATE lms_core)
+ add_test(NAME implemented_behaviour COMMAND lms_tests "~[known-defect]" --reporter junit --out implemented-results.xml)
+ add_test(NAME requirements_conformance COMMAND lms_tests "[known-defect]" --reporter junit --out conformance-results.xml)
+ set_tests_properties(implemented_behaviour requirements_conformance PROPERTIES TIMEOUT 90)
+endif()
