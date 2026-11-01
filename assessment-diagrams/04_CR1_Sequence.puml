@@ -1,0 +1,36 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Whole class extension and student display
+actor Lecturer
+participant "Lecturer menu" as menu
+participant DeadlineRepository as repo
+database SQLite as db
+actor Student
+participant "Student menu" as studentMenu
+Lecturer -> menu : assignment ID and later deadline
+menu -> repo : extendClass(actor, assignment, deadline)
+repo -> repo : validate calendar format
+repo -> db : BEGIN IMMEDIATE
+repo -> db : validate assigned lecturer and current class date
+alt valid request
+ repo -> db : upsert ClassExtensions
+ repo -> db : upsert current enrolled student Extensions\npreserve longer individual dates
+ repo -> db : COMMIT
+ repo --> menu : success
+else rejected or database error
+ repo -> db : ROLLBACK
+ repo --> menu : exception
+ menu --> Lecturer : error message
+end
+Student -> studentMenu : view enrolled assignments
+studentMenu -> repo : effectiveDeadline(assignment, student)
+repo -> db : MAX(base, class, individual)
+db --> repo : effective date
+repo --> studentMenu : effective date
+studentMenu --> Student : display assignment and effective date
+
+@enduml

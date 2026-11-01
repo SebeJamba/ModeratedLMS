@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Maintenance class addendum
+abstract class User {
+ # userID : int
+ # departmentID : int
+ {abstract} + getRoleName() : string
+ {abstract} + displayMenu(db : Database) : void
+}
+class Student
+class Lecturer
+class Administrator
+class Database {
+ - db : sqlite3*
+ + getHandle() : sqlite3*
+ + initializeSchema() : void
+}
+class DeadlineRepository {
+ - database : Database&
+ + initialize() : void
+ + extendClass(lecturerID, assignmentID, deadline) : void
+ + extendIndividual(lecturerID, assignmentID, studentID, deadline) : void
+ + effectiveDeadline(assignmentID, studentID) : string
+}
+User <|-- Student
+User <|-- Lecturer
+User <|-- Administrator
+Student ..> DeadlineRepository : list deadlines
+Lecturer ..> DeadlineRepository : extend
+DeadlineRepository --> "1" Database
+Administrator ..> Database : course setup
+note bottom of Database
+This is the implemented maintenance delta.
+Legacy UI still performs direct SQL.
+Original domain interfaces/Strategy remain missing.
+end note
+
+@enduml

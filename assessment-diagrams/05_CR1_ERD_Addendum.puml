@@ -1,0 +1,63 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Maintenance database relationships
+entity Users {
+ * userID : INTEGER <<PK>>
+ --
+ role : TEXT
+ departmentID : INTEGER <<FK>>
+}
+entity Courses {
+ * courseID : TEXT <<PK>>
+ --
+ lecturerID : INTEGER <<FK>>
+ departmentID : INTEGER <<FK>>
+}
+entity Enrollments {
+ * studentID : INTEGER <<PK,FK>>
+ * courseID : TEXT <<PK,FK>>
+}
+entity Assignments {
+ * assignmentID : INTEGER <<PK>>
+ --
+ courseID : TEXT <<FK nullable for migration>>
+ deadline : TEXT
+}
+entity Extensions {
+ * extensionID : INTEGER <<PK>>
+ --
+ assignmentID : INTEGER <<FK>>
+ studentID : INTEGER <<FK>>
+ extendedDeadline : TEXT
+ UNIQUE(assignmentID, studentID)
+}
+entity ClassExtensions {
+ * assignmentID : INTEGER <<PK,FK>>
+ --
+ extendedDeadline : TEXT
+ actorID : INTEGER <<FK>>
+ changedAt : TEXT
+}
+entity SchemaMigrations {
+ * version : INTEGER <<PK>>
+ --
+ appliedAt : TEXT
+}
+Users ||--o{ Courses : assigned lecturer
+Users ||--o{ Enrollments : student
+Courses ||--o{ Enrollments
+Courses |o--o{ Assignments
+Assignments ||--o{ Extensions
+Users ||--o{ Extensions
+Assignments ||--o| ClassExtensions
+Users ||--o{ ClassExtensions : latest actor
+note bottom of SchemaMigrations
+Addendum scope only. Departments, submissions
+and audit log retain original implementation gaps.
+end note
+
+@enduml

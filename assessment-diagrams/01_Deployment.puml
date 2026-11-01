@@ -1,0 +1,28 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Moderated LMS local workstation deployment
+node "School workstation" <<device>> {
+ node "Windows x64" <<executionEnvironment>> {
+  artifact "ModeratedLMS.exe" as app
+  artifact "lms.db" as db
+  artifact "Referenced work files" as files
+ }
+}
+node "External backup device" <<device>> {
+ artifact "Dated database and work copies" as backup
+}
+app --> db : SQLite file access
+app ..> files : records paths only
+db ..> backup : copy after clean shutdown
+files ..> backup : copy separately
+note bottom of app
+Offline runtime. One computer model.
+Review snapshot only: acceptance HOLD.
+No school installation is claimed.
+end note
+
+@enduml
