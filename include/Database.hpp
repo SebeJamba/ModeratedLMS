@@ -1,16 +1,19 @@
 #ifndef DATABASE_HPP
 #define DATABASE_HPP
 
-#include <string>
 #include "sqlite3.h"
+#include <string>
 
 class Database {
-private:
-    sqlite3* db;
-public:
-    Database(const std::string& dbName);
+  private:
+    sqlite3 *db = nullptr;
+
+  public:
+    Database(const std::string &dbName);
     ~Database();
-    sqlite3* getHandle() const;
+    Database(const Database &) = delete;
+    Database &operator=(const Database &) = delete;
+    sqlite3 *getHandle() const;
     void initializeSchema();
 };
 

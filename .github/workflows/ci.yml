@@ -13,11 +13,25 @@ jobs:
         run: cmake --build build --config Debug
       - name: Run all requirement and regression tests
         run: ctest --test-dir build -C Debug --output-on-failure
+      - name: Exercise full console workflow
+        run: python tools/console_smoke.py build/Debug/ModeratedLMS.exe build/console-workflow.txt
+      - name: Show failing assertions
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem build -Filter '*results.xml' | ForEach-Object {
+            [xml]$report = Get-Content $_.FullName
+            $report.SelectNodes('//testcase[failure or error]') | ForEach-Object {
+              Write-Output $_.name
+              Write-Output $_.InnerText
+            }
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
           path: |
+            build/console-workflow.txt
             build/*results.xml
             build/Testing/Temporary/LastTest.log
   windows-gcc-coverage:

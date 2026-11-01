@@ -1,3 +1,5 @@
+Historical baseline report. For the corrected branch, see 06_Fixed_Requirements.md and assessment-evidence/fixes.
+
 # Test Results Coverage and Quality Evidence
 
 ## Executed results

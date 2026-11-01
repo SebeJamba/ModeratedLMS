@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="lms_tests.exe" errors="0" failures="0" tests="166" hostname="tbd" time="1.156" timestamp="2026-11-01T20:49:41Z">
+    <properties>
+      <property name="filters" value="~[known-defect]"/>
+    </properties>
+    <testcase classname="lms_tests.exe.global" name="UT01 factory creates all four polymorphic roles" time="0.000" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="UT02 unknown role is rejected" time="0.000" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="UT03 password round trip and rejection" time="0.546" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT01 schema creation is repeatable and foreign keys are enabled" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT02 username and role constraints reject invalid records" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT03 invalid foreign key rejected" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT04 data survives database reopening" time="0.148" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST01 student submits existing assignment" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST02 lecturer records mark" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST03 administrator creates a valid user" time="0.185" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST04 all role menus can log out" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="QA01 moderation copies temporary mark strings safely" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT01 FR12 class extension affects every enrolled student" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT02 longer individual extension is preserved" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT03 new enrolment inherits durable class deadline" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT04 unauthorised class change rejected without mutation" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT05 equal earlier and invalid dates rejected" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT06 class update rolls back on a database error" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT07 student list shows effective deadline" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT08 lecturer menu performs class extension" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT09 migration is repeatable and leaves submission data intact" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT10 unknown assignment and unenrolled individual rejected" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT11 base and individual deadline boundaries" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG01 complete workflow hides mark and feedback until separate release" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG02 penalty boundaries use available maximum and partial days" time="0.000" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG03 clock controlled submission and replacement boundaries" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG04 class and individual extensions drive submission and penalty rules" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG05 role and department restrictions enforced in assessment operations" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG06 grade and audit roll back together on storage failure" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG07 audit rows are immutable and identify every modification" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG08 invalid input unknown targets and closed streams do not crash or loop" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG09 PBKDF2 matches independently computed SHA256 reference" time="0.181" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG10 late initial work is accepted with real late status" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG11 additive migration preserves duplicates as inactive historical attempts" time="0.002" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="RG12 moderation and release roll back on audit failure" time="0.004" status="run"/>
+    <system-out/>
+    <system-err/>
+  </testsuite>
+</testsuites>

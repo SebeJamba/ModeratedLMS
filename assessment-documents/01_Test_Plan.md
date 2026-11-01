@@ -1,3 +1,5 @@
+Historical baseline report. For the corrected branch, see 06_Fixed_Requirements.md and assessment-evidence/fixes.
+
 # Phase 5 Verification and Validation
 
 Siyabonga Jamba | Student number 202200995 | CS4433 | 1 November 2026

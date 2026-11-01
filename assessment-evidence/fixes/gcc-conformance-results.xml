@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="lms_tests.exe" errors="0" failures="0" tests="10" hostname="tbd" time="0.221" timestamp="2026-11-01T20:49:42Z">
+    <properties>
+      <property name="filters" value="[known-defect]"/>
+    </properties>
+    <testcase classname="lms_tests.exe.global" name="CF01 FR10 marks stay hidden before release" time="0.007" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF02 FR11 lecturer mark change creates audit record" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF03 FR08 marks above maximum are rejected" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF04 FR07 one partial late day deducts ten available marks" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF05 FR05 submission records current date" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF06 FR06 resubmission updates active attempt" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF07 FR08 written feedback column exists" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF08 FR11 audit records identify the changed submission" time="0.003" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF09 NFR02 stored hash identifies a recognised password KDF" time="0.189" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF10 FR08 marking uses the designed MARKED state" time="0.003" status="run"/>
+    <system-out/>
+    <system-err/>
+  </testsuite>
+</testsuites>

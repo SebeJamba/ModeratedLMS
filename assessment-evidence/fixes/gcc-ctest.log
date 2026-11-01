@@ -1,0 +1,33 @@
+Start testing: Nov 01 22:49 South Africa Standard Time
+----------------------------------------------------------
+1/2 Testing: implemented_behaviour
+1/2 Test: implemented_behaviour
+Command: "C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/fixed-gcc/lms_tests.exe" "~[known-defect]" "--reporter" "junit" "--out" "implemented-results.xml"
+Directory: C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/fixed-gcc
+"implemented_behaviour" start time: Nov 01 22:49 South Africa Standard Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   2.10 sec
+----------------------------------------------------------
+Test Passed.
+"implemented_behaviour" end time: Nov 01 22:49 South Africa Standard Time
+"implemented_behaviour" time elapsed: 00:00:02
+----------------------------------------------------------
+
+2/2 Testing: requirements_conformance
+2/2 Test: requirements_conformance
+Command: "C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/fixed-gcc/lms_tests.exe" "[known-defect]" "--reporter" "junit" "--out" "conformance-results.xml"
+Directory: C:/Users/ccccccppp/Documents/Codex/2026-11-01/here-s-my-project-for-cs4433/work/fixed-gcc
+"requirements_conformance" start time: Nov 01 22:49 South Africa Standard Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.26 sec
+----------------------------------------------------------
+Test Passed.
+"requirements_conformance" end time: Nov 01 22:49 South Africa Standard Time
+"requirements_conformance" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 01 22:49 South Africa Standard Time

@@ -7,7 +7,7 @@ for p in Path(args.input).glob('*.gcov.json.gz'):
  with gzip.open(p,'rt') as f:data=json.load(f)
  for file in data['files']:
   name=Path(file['file']).name
-  if name not in {'User.cpp','DeadlineRepository.cpp','Database.cpp','Security.cpp'}:continue
+  if name not in {'AssessmentService.cpp','User.cpp','DeadlineRepository.cpp','Database.cpp','Security.cpp'}:continue
   lines=file['lines'];covered=sum(x['count']>0 for x in lines);total=len(lines)
   rows.append({'file':name,'covered_lines':covered,'executable_lines':total,'percent':round(100*covered/total,2) if total else None})
 result={'tool':'GCC gcov JSON','scope':'Application C++ sources linked into lms_core; excludes main, SQLite, Catch2 and standard library. Mixed-layer code is not an isolated business-logic layer.','files':sorted(rows,key=lambda x:x['file'])}

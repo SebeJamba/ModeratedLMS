@@ -7,3 +7,5 @@ build*/
 *.pdb
 *.obj
 *.exe
+
+!assessment-evidence/fixes/*.gcov.json.gz

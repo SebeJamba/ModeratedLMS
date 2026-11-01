@@ -1,0 +1,14 @@
+[
+  {
+    "compiler": "MSVC",
+    "cases": 45,
+    "passed": 45,
+    "failed": 0
+  },
+  {
+    "compiler": "GCC",
+    "cases": 45,
+    "passed": 45,
+    "failed": 0
+  }
+]

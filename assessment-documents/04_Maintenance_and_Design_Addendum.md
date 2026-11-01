@@ -1,3 +1,5 @@
+Historical baseline report. For the corrected branch, see 06_Fixed_Requirements.md and assessment-evidence/fixes.
+
 # Phase 8 Maintenance and Design Addendum
 
 ## Request and classification
