@@ -1,6 +1,8 @@
 #include "User.hpp"
 #include "Security.hpp"
 #include <iostream>
+#include <limits>
+#include "DeadlineRepository.hpp"
 
 // Base User
 User::User(int id, std::string uname, std::string hash, int deptID)
@@ -26,12 +28,13 @@ void Student::displayMenu(Database& db) {
 
         if (choice == 1) {
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db.getHandle(), "SELECT assignmentID, title, deadline, maxMark FROM Assignments;", -1, &stmt, nullptr);
+            sqlite3_prepare_v2(db.getHandle(), "SELECT a.assignmentID, a.title, a.deadline, a.maxMark FROM Assignments a JOIN Enrollments e ON e.courseID=a.courseID WHERE e.studentID=?;", -1, &stmt, nullptr);
+            sqlite3_bind_int(stmt, 1, userID);
             std::cout << "\n--- Assignments ---\n";
             while (sqlite3_step(stmt) == SQLITE_ROW) {
                 std::cout << "ID: " << sqlite3_column_int(stmt, 0) 
                           << " | Title: " << sqlite3_column_text(stmt, 1) 
-                          << " | Deadline: " << sqlite3_column_text(stmt, 2) 
+                          << " | Effective deadline: " << DeadlineRepository(db).effectiveDeadline(sqlite3_column_int(stmt,0), userID) 
                           << " | Max Mark: " << sqlite3_column_double(stmt, 3) << "\n";
             }
             sqlite3_finalize(stmt);
@@ -91,25 +94,41 @@ void Lecturer::displayMenu(Database& db) {
         std::cout << "\n=== Lecturer Portal (" << username << ") ===\n";
         std::cout << "1. Create New Assignment\n";
         std::cout << "2. Grade Student Submissions\n";
-        std::cout << "3. Logout\n";
+        std::cout << "3. Logout\n4. Extend class deadline\n5. Extend individual deadline\n";
         std::cout << "Enter choice: ";
         std::cin >> choice;
 
-        if (choice == 1) {
-            std::string title, deadline;
+        if (choice == 4 || choice == 5) {
+            int assignment, student=0; std::string deadline;
+            std::cout << "Assignment ID: "; std::cin >> assignment;
+            if(choice==5) {std::cout << "Student ID: "; std::cin >> student;}
+            std::cout << "New deadline (YYYY-MM-DD HH:MM:SS): ";
+            std::getline(std::cin >> std::ws, deadline);
+            try {
+                DeadlineRepository repository(db);
+                if(choice==4) repository.extendClass(userID, assignment, deadline);
+                else repository.extendIndividual(userID, assignment, student, deadline);
+                std::cout << "[SUCCESS] Deadline extended.\n";
+            } catch(const std::exception& e) {std::cout << "[ERROR] " << e.what() << "\n";}
+        }
+        else if (choice == 1) {
+            std::string title, deadline, course;
             double maxMark;
+            std::cout << "Course code: "; std::cin >> course;
             std::cout << "Enter Assignment Title: ";
             std::cin >> title;
             std::cout << "Enter Deadline (YYYY-MM-DD): ";
-            std::cin >> deadline;
+            std::getline(std::cin >> std::ws, deadline);
             std::cout << "Enter Maximum Mark: ";
             std::cin >> maxMark;
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db.getHandle(), "INSERT INTO Assignments (title, deadline, maxMark) VALUES (?, ?, ?);", -1, &stmt, nullptr);
+            sqlite3_prepare_v2(db.getHandle(), "INSERT INTO Assignments (title, deadline, maxMark, courseID) SELECT ?, ?, ?, c.courseID FROM Courses c WHERE c.courseID=? AND c.lecturerID=?;", -1, &stmt, nullptr);
             sqlite3_bind_text(stmt, 1, title.c_str(), -1, SQLITE_STATIC);
             sqlite3_bind_text(stmt, 2, deadline.c_str(), -1, SQLITE_STATIC);
             sqlite3_bind_double(stmt, 3, maxMark);
+            sqlite3_bind_text(stmt,4,course.c_str(),-1,SQLITE_TRANSIENT);
+            sqlite3_bind_int(stmt,5,userID);
             sqlite3_step(stmt);
             sqlite3_finalize(stmt);
             std::cout << "[SUCCESS] Assignment created.\n";
@@ -190,8 +209,8 @@ void HeadOfDepartment::displayMenu(Database& db) {
 
             sqlite3_prepare_v2(db.getHandle(), "INSERT INTO AuditLog (actorID, timestamp, oldValue, newValue, reason) VALUES (?, '2026-10-25 21:00:00', ?, ?, ?);", -1, &stmt, nullptr);
             sqlite3_bind_int(stmt, 1, userID);
-            sqlite3_bind_text(stmt, 2, std::to_string(oldMark).c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 3, std::to_string(newMark).c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, std::to_string(oldMark).c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 3, std::to_string(newMark).c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 4, reason.c_str(), -1, SQLITE_STATIC);
             sqlite3_step(stmt);
             sqlite3_finalize(stmt);
@@ -225,11 +244,36 @@ void Administrator::displayMenu(Database& db) {
         std::cout << "\n=== Administrator Portal (" << username << ") ===\n";
         std::cout << "1. Register New User\n";
         std::cout << "2. View All Users\n";
-        std::cout << "3. Logout\n";
+        std::cout << "3. Logout\n4. Create course and assign lecturer\n5. Enrol student\n6. Link existing assignment to course\n";
         std::cout << "Enter choice: ";
         std::cin >> choice;
 
-        if (choice == 1) {
+        if (choice == 4 || choice == 5 || choice == 6) {
+            sqlite3_stmt* statement=nullptr;
+            std::string course, name; int lecturer=0, department=0, student=0, assignment=0;
+            std::cout << "Course code: "; std::cin >> course;
+            if(choice==4) {
+                std::cout << "Course name: "; std::getline(std::cin >> std::ws,name);
+                std::cout << "Department ID and Lecturer ID: "; std::cin >> department >> lecturer;
+                sqlite3_prepare_v2(db.getHandle(),"INSERT INTO Courses VALUES(?,?,?,?);",-1,&statement,nullptr);
+                sqlite3_bind_text(statement,1,course.c_str(),-1,SQLITE_TRANSIENT);
+                sqlite3_bind_text(statement,2,name.c_str(),-1,SQLITE_TRANSIENT);
+                sqlite3_bind_int(statement,3,department);sqlite3_bind_int(statement,4,lecturer);
+            } else if(choice==5) {
+                std::cout << "Student ID: "; std::cin >> student;
+                sqlite3_prepare_v2(db.getHandle(),"INSERT INTO Enrollments VALUES(?,?);",-1,&statement,nullptr);
+                sqlite3_bind_int(statement,1,student);sqlite3_bind_text(statement,2,course.c_str(),-1,SQLITE_TRANSIENT);
+            } else {
+                std::cout << "Assignment ID: "; std::cin >> assignment;
+                sqlite3_prepare_v2(db.getHandle(),"UPDATE Assignments SET courseID=? WHERE assignmentID=?;",-1,&statement,nullptr);
+                sqlite3_bind_text(statement,1,course.c_str(),-1,SQLITE_TRANSIENT);sqlite3_bind_int(statement,2,assignment);
+            }
+            if(statement && sqlite3_step(statement)==SQLITE_DONE && sqlite3_changes(db.getHandle())>0)
+                std::cout << "[SUCCESS] Course data saved.\n";
+            else std::cout << "[ERROR] Course operation failed.\n";
+            sqlite3_finalize(statement);
+        }
+        else if (choice == 1) {
             std::string newUname, newPwd, role;
             int deptID;
             std::cout << "Enter username: ";
@@ -238,7 +282,6 @@ void Administrator::displayMenu(Database& db) {
             std::cin >> newPwd;
             std::cout << "Enter role (STUDENT, LECTURER, HOD, ADMIN): ";
             std::cin >> role;
-
             // Fetch and display available departments dynamically
             std::cout << "\n--- Available Departments ---\n";
             sqlite3_stmt* deptStmt;
@@ -269,7 +312,6 @@ void Administrator::displayMenu(Database& db) {
             if (sqlite3_step(stmt) == SQLITE_DONE) {
                 std::cout << "[SUCCESS] User registered successfully.\n";
             } else {
-                // Print the exact SQLite error message to diagnose the failure
                 std::cout << "[ERROR] Registration failed: " << sqlite3_errmsg(db.getHandle()) << "\n";
             }
             sqlite3_finalize(stmt);

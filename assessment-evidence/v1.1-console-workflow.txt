@@ -1,0 +1,122 @@
+==================================================
+   MODERATED LMS - PROFESSIONAL MULTI-FILE ARCH   
+==================================================
+[INIT] Seeded default department and administrator ('admin' / 'Admin123!').
+
+--------------------------------------------------
+SYSTEM LOGIN (Type 'exit' as username to quit)
+--------------------------------------------------
+Username: Password: 
+[SUCCESS] Welcome back, admin!
+
+=== Administrator Portal (admin) ===
+1. Register New User
+2. View All Users
+3. Logout
+4. Create course and assign lecturer
+5. Enrol student
+6. Link existing assignment to course
+Enter choice: Enter username: Enter password: Enter role (STUDENT, LECTURER, HOD, ADMIN): 
+--- Available Departments ---
+ID: 1 | Name: Computer Science
+ID: 2 | Name: Physics
+ID: 3 | Name: Mathematics
+ID: 4 | Name: Computer Science
+Enter Department ID: [SUCCESS] User registered successfully.
+
+=== Administrator Portal (admin) ===
+1. Register New User
+2. View All Users
+3. Logout
+4. Create course and assign lecturer
+5. Enrol student
+6. Link existing assignment to course
+Enter choice: Enter username: Enter password: Enter role (STUDENT, LECTURER, HOD, ADMIN): 
+--- Available Departments ---
+ID: 1 | Name: Computer Science
+ID: 2 | Name: Physics
+ID: 3 | Name: Mathematics
+ID: 4 | Name: Computer Science
+Enter Department ID: [SUCCESS] User registered successfully.
+
+=== Administrator Portal (admin) ===
+1. Register New User
+2. View All Users
+3. Logout
+4. Create course and assign lecturer
+5. Enrol student
+6. Link existing assignment to course
+Enter choice: Course code: Course name: Department ID and Lecturer ID: [SUCCESS] Course data saved.
+
+=== Administrator Portal (admin) ===
+1. Register New User
+2. View All Users
+3. Logout
+4. Create course and assign lecturer
+5. Enrol student
+6. Link existing assignment to course
+Enter choice: Course code: Student ID: [SUCCESS] Course data saved.
+
+=== Administrator Portal (admin) ===
+1. Register New User
+2. View All Users
+3. Logout
+4. Create course and assign lecturer
+5. Enrol student
+6. Link existing assignment to course
+Enter choice: 
+--------------------------------------------------
+SYSTEM LOGIN (Type 'exit' as username to quit)
+--------------------------------------------------
+Username: Password: 
+[SUCCESS] Welcome back, lecturer!
+
+=== Lecturer Portal (lecturer) ===
+1. Create New Assignment
+2. Grade Student Submissions
+3. Logout
+4. Extend class deadline
+5. Extend individual deadline
+Enter choice: Course code: Enter Assignment Title: Enter Deadline (YYYY-MM-DD): Enter Maximum Mark: [SUCCESS] Assignment created.
+
+=== Lecturer Portal (lecturer) ===
+1. Create New Assignment
+2. Grade Student Submissions
+3. Logout
+4. Extend class deadline
+5. Extend individual deadline
+Enter choice: Assignment ID: New deadline (YYYY-MM-DD HH:MM:SS): [SUCCESS] Deadline extended.
+
+=== Lecturer Portal (lecturer) ===
+1. Create New Assignment
+2. Grade Student Submissions
+3. Logout
+4. Extend class deadline
+5. Extend individual deadline
+Enter choice: 
+--------------------------------------------------
+SYSTEM LOGIN (Type 'exit' as username to quit)
+--------------------------------------------------
+Username: Password: 
+[SUCCESS] Welcome back, student!
+
+=== Student Portal (student) ===
+1. View Available Assignments
+2. Submit Assignment
+3. View My Grades & Submissions
+4. Logout
+Enter choice: 
+--- Assignments ---
+ID: 1 | Title: Essay | Effective deadline: 2026-11-03 12:00:00 | Max Mark: 100
+
+=== Student Portal (student) ===
+1. View Available Assignments
+2. Submit Assignment
+3. View My Grades & Submissions
+4. Logout
+Enter choice: 
+--------------------------------------------------
+SYSTEM LOGIN (Type 'exit' as username to quit)
+--------------------------------------------------
+Username: 
+Shutting down Moderated LMS. Goodbye!

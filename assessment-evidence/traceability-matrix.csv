@@ -1,0 +1,19 @@
+requirement,use_cases,design,tables,source_files,test_cases,status
+FR01,UC01,"User hierarchy, authentication/RBAC",Users,main.cpp; Security.cpp; User.cpp,UT01-03; MT04,"Partial; authentication works, scope/security gaps remain"
+FR02,UC02-04,"Administrator, Course, Enrollment",Users; Departments; Courses; Enrollments,User.cpp; DeadlineRepository.cpp,ST03; console smoke,Partial; update/deactivate/department management absent
+FR03,UC09,Assignment; course association,Assignments,User.cpp,console smoke,Partial; metadata/validation incomplete
+FR04,UC10,Extension; DeadlineRepository,Extensions,DeadlineRepository.cpp; User.cpp,MT02; MT10-11,Storage/extension path tested in v1.1; submission integration open
+FR05,UC05-06,"Student, Submission; state/activity/submit sequence",Submissions; Assignments; Enrollments,User.cpp,ST01; CF05; MT07,Partial; fixed clock and incomplete guards
+FR06,UC07,Submission resubmission self-transition,Submissions,User.cpp,CF06,FAIL duplicate active attempts; cutoff rule missing
+FR07,UC14,ILatePenaltyCalculator / StandardLatePenalty,Assignments; Extensions; Submissions,No strategy supplied; User.cpp marks without penalty,CF04; planned deadline boundaries,FAIL; rounding interpretation requires review
+FR08,UC11,"Lecturer, Submission",Submissions.feedback required by design,User.cpp,ST02; CF03; CF07; CF10,FAIL feedback/range/lifecycle
+FR09,UC12,HoD; moderation sequence,Courses; Submissions,User.cpp,QA01; source review,Partial; department scope and full transition/audit missing
+FR10,UC08; UC13,MODERATED to RELEASED,Submissions,User.cpp,CF01,FAIL premature visibility/no release
+FR11,UC15,AuditLog and audit service,AuditLog.submissionID required by design,User.cpp; Database.cpp,CF02; CF08; QA01,FAIL full audit; temporary binding fixed
+FR12,UC16 (new); UC05,DeadlineRepository; CR1 sequence/class/ERD addendum,ClassExtensions; Extensions; Courses; Enrollments,DeadlineRepository.cpp; User.cpp,MT01-11; console smoke,Technical CR1 checks PASS; stakeholder review and legacy integration pending
+NFR01,UC01,Authentication performance with 800 stored users,Users,main.cpp; Security.cpp,AT06 planned,NOT RUN; no timing claim
+NFR02,UC01,Recognised salted password library,Users.passwordHash,Security.cpp,UT03; CF09,FAIL; round trip does not prove secure hashing
+NFR03,All database paths,Prepared statements through DAL,All tables,Database.cpp; User.cpp; DeadlineRepository.cpp,Source review; MT tests,CR1 binds variable values; full DAL refactor incomplete
+NFR04,All operational flows,Offline workstation deployment,Local SQLite,All application sources,console smoke,Offline synthetic flow exercised; network concurrency untested
+NFR05,All rule tests,Business-logic coverage >=70 percent,Not applicable,User.cpp mixed layer; DeadlineRepository.cpp,gcov JSON,Application coverage measured; isolated domain-layer criterion not yet established
+NFR06,Exception flows,Validation and exception recovery,Transaction constraints,All application sources,IT02-03; MT04-06; MT10,CR1 failure paths pass; legacy robustness incomplete

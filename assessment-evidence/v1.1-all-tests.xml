@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="lms_tests.exe" errors="0" failures="10" tests="86" hostname="tbd" time="0.300" timestamp="2026-11-01T14:51:53Z">
+    <testcase classname="lms_tests.exe.global" name="UT01 factory creates all four polymorphic roles" time="0.000" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="UT02 unknown role is rejected" time="0.000" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="UT03 password round trip and rejection" time="0.002" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT01 schema creation is repeatable and foreign keys are enabled" time="0.006" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT02 username and role constraints reject invalid records" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT03 invalid foreign key rejected" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="IT04 data survives database reopening" time="0.150" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST01 student submits existing assignment" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST02 lecturer records mark" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST03 administrator creates a valid user" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="ST04 all role menus can log out" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="CF01 FR10 marks stay hidden before release" time="0.005" status="run">
+      <failure message="output.find(&quot;80.000000&quot;)==std::string::npos" type="CHECK">
+FAILED:
+  CHECK( output.find("80.000000")==std::string::npos )
+with expansion:
+  241
+  ==
+  18446744073709551615 (0xffffffffffffffff)
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(113)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF02 FR11 lecturer mark change creates audit record" time="0.004" status="run">
+      <failure message="f.scalar(&quot;SELECT COUNT(*) FROM AuditLog;&quot;)==&quot;1&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT COUNT(*) FROM AuditLog;")=="1" )
+with expansion:
+  "0" == "1"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(117)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF03 FR08 marks above maximum are rejected" time="0.004" status="run">
+      <failure message="f.scalar(&quot;SELECT rawMark IS NULL FROM Submissions WHERE submissionID=1;&quot;)==&quot;1&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT rawMark IS NULL FROM Submissions WHERE submissionID=1;")=="1" )
+with expansion:
+  "0" == "1"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(121)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF04 FR07 one partial late day deducts ten available marks" time="0.004" status="run">
+      <failure message="f.scalar(&quot;SELECT finalMark FROM Submissions WHERE submissionID=1;&quot;)==&quot;70.0&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT finalMark FROM Submissions WHERE submissionID=1;")=="70.0" )
+with expansion:
+  "80.0" == "70.0"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(125)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF05 FR05 submission records current date" time="0.008" status="run">
+      <failure message="f.scalar(&quot;SELECT date(submissionTime)=date('now','localtime') FROM Submissions;&quot;)==&quot;1&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT date(submissionTime)=date('now','localtime') FROM Submissions;")=="1" )
+with expansion:
+  "0" == "1"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(129)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF06 FR06 resubmission updates active attempt" time="0.004" status="run">
+      <failure message="f.scalar(&quot;SELECT COUNT(*) FROM Submissions WHERE assignmentID=1 AND studentID=4;&quot;)==&quot;1&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT COUNT(*) FROM Submissions WHERE assignmentID=1 AND studentID=4;")=="1" )
+with expansion:
+  "2" == "1"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(133)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF07 FR08 written feedback column exists" time="0.004" status="run">
+      <failure message="f.scalar(&quot;SELECT COUNT(*) FROM pragma_table_info('Submissions') WHERE name='feedback';&quot;)==&quot;1&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT COUNT(*) FROM pragma_table_info('Submissions') WHERE name='feedback';")=="1" )
+with expansion:
+  "0" == "1"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(136)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF08 FR11 audit records identify the changed submission" time="0.004" status="run">
+      <failure message="f.scalar(&quot;SELECT COUNT(*) FROM pragma_table_info('AuditLog') WHERE name='submissionID';&quot;)==&quot;1&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT COUNT(*) FROM pragma_table_info('AuditLog') WHERE name='submissionID';")=="1" )
+with expansion:
+  "0" == "1"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(139)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF09 NFR02 stored hash identifies a recognised password KDF" time="0.000" status="run">
+      <failure message="(hash.find(&quot;$argon2&quot;)==0 || hash.find(&quot;pbkdf2$&quot;)==0 || hash.find(&quot;$2b$&quot;)==0)" type="CHECK">
+FAILED:
+  CHECK( (hash.find("$argon2")==0 || hash.find("pbkdf2$")==0 || hash.find("$2b$")==0) )
+with expansion:
+  false
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(143)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="CF10 FR08 marking uses the designed MARKED state" time="0.009" status="run">
+      <failure message="f.scalar(&quot;SELECT status FROM Submissions WHERE submissionID=1;&quot;)==&quot;MARKED&quot;" type="CHECK">
+FAILED:
+  CHECK( f.scalar("SELECT status FROM Submissions WHERE submissionID=1;")=="MARKED" )
+with expansion:
+  "GRADED" == "MARKED"
+at C:\Users\ccccccppp\Documents\Codex\2026-11-01\here-s-my-project-for-cs4433\outputs\CS4433_Phases_5_to_8\source\v1.1\tests\tests.cpp(147)
+      </failure>
+    </testcase>
+    <testcase classname="lms_tests.exe.global" name="QA01 moderation copies temporary mark strings safely" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT01 FR12 class extension affects every enrolled student" time="0.006" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT02 longer individual extension is preserved" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT03 new enrolment inherits durable class deadline" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT04 unauthorised class change rejected without mutation" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT05 equal earlier and invalid dates rejected" time="0.009" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT06 class update rolls back on a database error" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT07 student list shows effective deadline" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT08 lecturer menu performs class extension" time="0.004" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT09 migration is repeatable and leaves submission data intact" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT10 unknown assignment and unenrolled individual rejected" time="0.005" status="run"/>
+    <testcase classname="lms_tests.exe.global" name="MT11 base and individual deadline boundaries" time="0.006" status="run"/>
+    <system-out/>
+    <system-err/>
+  </testsuite>
+</testsuites>

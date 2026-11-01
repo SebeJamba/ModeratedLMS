@@ -1,0 +1,37 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+title Class extension activity and effective date display
+|Lecturer|
+start
+:Select class extension;
+:Enter assignment and later timestamp;
+|Deadline repository|
+:Validate timestamp;
+:Begin transaction and validate course lecturer;
+if (Authorised and date later?) then (yes)
+ :Persist class override;
+ :Materialise enrolled student overrides
+without shortening longer individual dates;
+ if (All writes succeed?) then (yes)
+  :Commit;
+ else (no)
+  :Rollback and report error;
+  stop
+ endif
+else (no)
+ :Rollback and report rejection;
+ stop
+endif
+|Student|
+:List enrolled assignments;
+|Deadline repository|
+:Resolve max of base class and individual date;
+|Student|
+:Display effective deadline;
+stop
+
+@enduml

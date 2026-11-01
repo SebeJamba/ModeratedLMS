@@ -3,6 +3,7 @@
 #include "Database.hpp"
 #include "Security.hpp"
 #include "User.hpp"
+#include "DeadlineRepository.hpp"
 
 int main() {
     try {
@@ -12,6 +13,7 @@ int main() {
         
         Database db("lms.db");
         db.initializeSchema();
+        DeadlineRepository(db).initialize();
 
         // Seed default Department and Admin if empty
         sqlite3_stmt* stmt;

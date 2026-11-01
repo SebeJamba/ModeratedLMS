@@ -1,0 +1,22 @@
+Microsoft (R) COFF/PE Dumper Version 14.33.31630.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file work\ninja-v1.1\ModeratedLMS.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    bcrypt.dll
+    KERNEL32.dll
+
+  Summary
+
+       12000 .data
+       13000 .pdata
+       36000 .rdata
+        2000 .reloc
+        1000 .rsrc
+      1C5000 .text
+        1000 _RDATA
